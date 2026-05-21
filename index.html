@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuiz Sains Tahun 5: Unit 2 Manusia</title>
+    <style>
+        :root {
+            --primary: #008080;
+            --secondary: #ffdab9;
+            --dark: #2d3748;
+            --light: #f7fafc;
+            --success: #48bb78;
+            --danger: #f56565;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: var(--primary);
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .question-card {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #fff;
+        }
+        .question-text {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        .option-label {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        .option-label:hover {
+            background-color: #f7fafc;
+            border-color: var(--primary);
+        }
+        input[type="radio"] {
+            margin-right: 12px;
+        }
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background-color: #006666;
+        }
+        #result-section {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .score-display {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Kuiz Sains Tahun 5 <br><small>Unit 2: Manusia (50 Soalan)</small></h1>
+    <hr>
+    
+    <div id="auth-section">
+        <h3>Maklumat Murid</h3>
+        <div class="form-group">
+            <label for="student-name">Nama Penuh Murid:</label>
+            <input type="text" id="student-name" placeholder="Contoh: Muhammad Ali">
+        </div>
+        <div class="form-group">
+            <label for="student-class">Kelas:</label>
+            <input type="text" id="student-class" placeholder="Contoh: 5 Bijak">
+        </div>
+        <button class="btn" onclick="startQuiz()">Mula Jawab Kuiz</button>
+    </div>
+
+    <div id="quiz-section" style="display:none;">
+        <div id="questions-container"></div>
+        <button class="btn" onclick="gradeQuiz()">Hantar Semua Jawapan</button>
+    </div>
+
+    <div id="result-section">
+        <h2>Tahniah, Sesi Jawab Selesai!</h2>
+        <div class="score-display" id="score-text">0 / 50</div>
+        <p>Sila tekan butang di bawah untuk menghantar keputusan anda terus ke Telegram Cikgu.</p>
+        <button class="btn" id="send-tele-btn" onclick="sendToTelegram()">Hantar Markah ke Telegram Cikgu</button>
+        <p id="status-msg" style="margin-top:15px; font-weight:bold;"></p>
+    </div>
+</div>
+
+<script>
+    // Konfigurasi Bot Telegram Cikgu
+    const TELE_TOKEN = "8825456874:AAGb3Owl7HNJ1m0rP5fkMJnsQDKFkn8rj3I";
+    const TELE_CHAT_ID = "6087514961";
+
+    // 50 Data Soalan Bank DSKP Sains Tahun 5
+    const bankSoalan = [
+        { q: "Apakah komponen utama yang membentuk sistem rangka manusia?", o: ["Tulang-tulang", "Otot-otot", "Darah", "Kulit"], a: 0 },
+        { q: "Berapakah bilangan fungsi utama sistem rangka manusia?", o: ["2", "3", "4", "5"], a: 2 },
+        { q: "Apakah fungsi utama tulang tengkorak?", o: ["Melindungi otak", "Melindungi jantung", "Menghasilkan darah", "Menyokong berat"], a: 0 },
+        { q: "Organ apakah yang dilindungi secara khusus oleh tulang rusuk?", o: ["Otak dan mata", "Jantung dan peparu", "Perut dan usus", "Ginjal dan hati"], a: 1 },
+        { q: "Apakah fungsi utama tulang belakang manusia?", o: ["Melindungi korda spina dan menyokong tubuh", "Mengepam darah", "Menghancurkan kalsium", "Tempat pertukaran gas"], a: 0 },
+        { q: "Apakah fungsi tulang tangan dan tulang kaki?", o: ["Sokongan dan pergerakan", "Melindungi otak", "Menapis toksik", "Menyerap oksigen"], a: 0 },
+        { q: "Apakah nama tempat pertemuan antara dua atau lebih tulang?", o: ["Sendi", "Rangka", "Rawan", "Ligamen"], a: 0 },
+        { q: "Apakah fungsi utama fungsi sendi?", o: ["Membolehkan pergerakan dan kelenturan tubuh", "Mengeraskan struktur badan", "Mengepam cecair", "Menghasilkan kalsium"], a: 0 },
+        { q: "Sendi pada bahagian manakah yang membolehkan gerakan putaran ke pelbagai arah?", o: ["Sendi bahu", "Sendi lutut", "Sendi siku", "Sendi jari"], a: 0 },
+        { q: "Sendi engsel pada lutut membenarkan pergerakan ke berapa arah?", o: ["Satu arah sahaja", "Semua arah", "Putaran bebas", "Dua arah bertentangan"], a: 0 },
+        { q: "Apakah organ mengepam utama di dalam sistem peredaran darah?", o: ["Jantung", "Peparu", "Hati", "Otak"], a: 0 },
+        { q: "Berapakah bilangan ruang/injap utama pengepaman di dalam jantung manusia?", o: ["2", "4", "6", "3"], a: 1 },
+        { q: "Apakah fungsi utama sistem peredaran darah manusia?", o: ["Mengangkut oksigen, nutrien, dan bahan buangan", "Mencerna makanan", "Melindungi organ dalaman", "Mengawal koordinasi otot"], a: 0 },
+        { q: "Apakah peranan utama organ peparu dalam sistem peredaran darah?", o: ["Tempat pertukaran gas oksigen dan karbon dioksida", "Mengepam darah", "Menyerap zat besi", "Menyingkirkan sisa air urin"], a: 0 },
+        { q: "Apakah tiub pengangkutan cecair darah ke seluruh badan?", o: ["Salur darah", "Trakea", "Esofagus", "Uretra"], a: 0 },
+        { q: "Darah yang mengalir dari peparu ke jantung kaya dengan gas apa?", o: ["Oksigen", "Karbon Dioksida", "Nitrogen", "Hidrogen"], a: 0 },
+        { q: "Darah yang dibawa dari seluruh tubuh kembali ke jantung kaya dengan gas apa?", o: ["Karbon Dioksida", "Oksigen", "Helium", "Karbon Monoksida"], a: 0 },
+        { q: "Di manakah sel darah merah yang matang dihasilkan di dalam sistem rangka?", o: ["Sumsum tulang", "Permukaan sendi", "Dalam tengkorak", "Tulang rawan rawan"], a: 0 },
+        { q: "Apakah peranan sistem peredaran darah terhadap sistem pencernaan?", o: ["Mengangkut nutrien yang diserap usus ke seluruh tubuh", "Menghancurkan protein", "Membekalkan asid perut", "Menyingkirkan tinja"], a: 0 },
+        { q: "Mengapakah sistem rangka sangat penting kepada sistem peredaran darah?", o: ["Melindungi jantung/peparu dan menghasilkan sel darah", "Membantu menapis toksik", "Mengepam plasma darah", "Mengawal tekanan gas"], a: 0 },
+        { q: "Jika seseorang tercekik makanan di esofagus, sistem apakah yang pertama terganggu?", o: ["Sistem pencernaan", "Sistem peredaran darah", "Sistem rangka", "Sistem pembiakan"], a: 0 },
+        { q: "Mengapakah tercekik makanan boleh menyebabkan kesukaran bernafas?", o: ["Esofagus yang mengembang menghimpit trakea bersebelahan", "Makanan masuk ke dalam jantung", "Darah membeku di peparu", "Tulang rusuk mengecut"], a: 0 },
+        { q: "Apakah kesan jika salur darah pada kaki tersumbat akibat kolesterol tinggi?", o: ["Aliran darah tersangkut dan otot kaki kekurangan oksigen", "Tulang kaki patah secara tiba-tiba", "Suhu badan menurun ke sifar", "Makanan tidak boleh dicerna"], a: 0 },
+        { q: "Apakah amalan terbaik untuk menjaga kesihatan sistem peredaran darah?", o: ["Kurangkan makanan berlemak tinggi dan aktif bersenam", "Minum air berkarbonat", "Tidur sepanjang hari", "Makan makanan masin sahaja"], a: 0 },
+        { q: "Nutrien seperti kalsium amat penting untuk mengekalkan kesihatan sistem...", o: ["Rangka", "Pencernaan", "Pernafasan", "Perkumuhan"], a: 0 },
+        { q: "Apakah yang mengangkut oksigen daripada peparu ke sel-sel otak?", o: ["Sel darah merah", "Sel darah putih", "Plasma air", "Kepingan darah"], a: 0 },
+        { q: "Sendi pada tulang leher membolehkan kepala melakukan pergerakan berbentuk...", o: ["Pusingan/putaran kiri kanan", "Satu arah ke bawah sahaja", "Gerakan statik", "Tiada pergerakan"], a: 0 },
+        { q: "Mengapakah kadar denyutan nadi meningkat selepas kita berlari laju?", o: ["Jantung mengepam laju untuk hantar lebih oksigen ke otot", "Peparu mengecil", "Tulang paha patah", "Darah menjadi semakin pekat"], a: 0 },
+        { q: "Antara berikut, manakah organ sistem perkumuhan yang menapis darah kita?", o: ["Ginjal", "Perut", "Jantung", "Otak"], a: 0 },
+        { q: "Apakah gas yang dihembus keluar oleh peparu semasa proses respirasi?", o: ["Karbon Dioksida", "Oksigen", "Nitrogen", "Wap alkohol"], a: 0 },
+        { q: "Kecederaan patah tulang belakang boleh mengakibatkan kelumpuhan kerana mencederakan...", o: ["Korda spina (saraf tunjang)", "Saluran esofagus", "Asid di dalam perut", "Tulang selangka"], a: 0 },
+        { q: "Di manakah lokasi letaknya kelenjar yang membantu pencernaan awal karbohidrat?", o: ["Mulut (air liur)", "Perut", "Usus Besar", "Dubur"], a: 0 },
+        { q: "Apakah kesan penuaan terhadap sistem rangka manusia sekiranya kurang kalsium?", o: ["Tulang menjadi rapuh (Osteoporosis)", "Darah membeku", "Bilangan sendi bertambah", "Paru-paru bocor"], a: 0 },
+        { q: "Salur darah yang membawa darah keluar dari jantung ke seluruh badan dikenali sebagai...", o: ["Arteri", "Vena", "Kapilari", "Injap"], a: 0 },
+        { q: "Salur darah yang membawa darah kembali semula ke jantung dari badan dinamakan...", o: ["Vena", "Arteri", "Saraf", "Trunkus"], a: 0 },
+        { q: "Mengapakah merokok sangat merosakkan sistem peredaran darah dan pernafasan?", o: ["Tar merosakkan alveolus dan menjejaskan kualiti oksigen darah", "Asap merosakkan kalsium tulang", "Rokok mencairkan asid pencernaan", "Menyekat pergerakan sendi bahu"], a: 0 },
+        { q: "Apakah fungsi utama cecair sinovial yang ada di dalam ruang sendi?", o: ["Bertindak sebagai pelincir bagi mengurangkan geseran tulang", "Membekalkan gas nitrogen", "Mengeraskan sendi", "Mengepam sel darah"], a: 0 },
+        { q: "Apakah kesan jika sistem pernafasan manusia gagal berfungsi?", o: ["Sel-sel badan mati akibat ketiadaan oksigen", "Sistem rangka bertukar bentuk", "Makanan di dalam perut terkeluar", "Kadar nadi meningkat selamanya"], a: 0 },
+        { q: "Sistem manakah yang bertanggungjawab menyingkirkan sisa toksik urea daripada darah?", o: ["Sistem perkumuhan", "Sistem rangka", "Sistem pencernaan", "Sistem otot"], a: 0 },
+        { q: "Darah yang mengalir di dalam tubuh manusia berwarna merah disebabkan adanya protein...", o: ["Hemoglobin", "Kalsium", "Insulin", "Keratin"], a: 0 },
+        { q: "Apakah yang menghubungkan struktur otot dengan tulang rangka kita?", o: ["Tendon", "Sendi", "Salur darah", "Kulit"], a: 0 },
+        { q: "Sistem peredaran darah manusia dikenali sebagai sistem peredaran...", o: ["Ganda dua tertutup", "Terbuka tunggal", "Statik berasingan", "Sistem kapilari bebas"], a: 0 },
+        { q: "Apakah yang akan terjadi sekiranya dinding usus kecil rosak?", o: ["Nutrien makanan gagal diserap ke dalam aliran darah", "Udara pernafasan tersumbat", "Tulang belakang melengkung", "Jantung berhenti mengepam"], a: 0 },
+        { q: "Mengapakah meminum susu segar sangat digalakkan untuk kanak-kanak?", o: ["Kaya kalsium untuk pertumbuhan tulang sistem rangka", "Mengandungi gas oksigen tinggi", "Melincirkan salur vena", "Mempercepatkan sistem pencernaan"], a: 0 },
+        { q: "Antara berikut, yang manakah merupakan komponen cecair darah?", o: ["Plasma, sel darah merah, sel darah putih, platelet", "Air ketuban dan asid gastric", "Kalsium cair dan glukosa padat", "Mukus dan air liur"], a: 0 },
+        { q: "Apakah fungsi sel darah putih di dalam sistem peredaran darah?", o: ["Melawan jangkitan penyakit dan bakteria", "Mengangkut gas oksigen", "Membekukan luka", "Menyerap zat besi"], a: 0 },
+        { q: "Apakah fungsi komponen platelet (kepingan darah)?", o: ["Membantu pembekuan darah semasa luka", "Mengangkut hormon", "Melindungi otak", "Menggerakkan sendi engsel"], a: 0 },
+        { q: "Manakah sistem yang membekalkan tenaga asas, yang kemudiannya diedarkan oleh sistem peredaran darah?", o: ["Sistem pencernaan", "Sistem rangka", "Sistem perkumuhan", "Sistem pembiakan"], a: 0 },
+        { q: "Apakah kesan buruk sekiranya salur darah arteri koronari pada jantung tersumbat?", o: ["Serangan jantung (otot jantung kekurangan oksigen)", "Patah tulang rusuk", "Sistem pencernaan menjadi terlalu laju", "Otak menghasilkan kalsium"], a: 0 },
+        { q: "Mengapakah anatomi manusia dianggap sebagai satu sistem yang saling bergantung?", o: ["Kegagalan satu sistem akan menjejaskan fungsi sistem yang lain", "Setiap sistem bekerja asing tanpa kaitan", "Manusia boleh hidup tanpa peredaran darah", "Sistem rangka boleh menggantikan fungsi peparu"], a: 0 }
+    ];
+
+    let markah = 0;
+    let namaMurid = "";
+    let kelasMurid = "";
+
+    function startQuiz() {
+        namaMurid = document.getElementById("student-name").value.trim();
+        kelasMurid = document.getElementById("student-class").value.trim();
+
+        if (namaMurid === "" || kelasMurid === "") {
+            alert("Sila masukkan Nama dan Kelas terlebih dahulu!");
+            return;
+        }
+
+        document.getElementById("auth-section").style.display = "none";
+        document.getElementById("quiz-section").style.display = "block";
+
+        renderQuestions();
+    }
+
+    function renderQuestions() {
+        const container = document.getElementById("questions-container");
+        container.innerHTML = "";
+
+        bankSoalan.forEach((item, index) => {
+            let optionsHtml = "";
+            item.o.forEach((opt, oIndex) => {
+                optionsHtml += `
+                    <label class="option-label">
+                        <input type="radio" name="q${index}" value="${oIndex}">
+                        ${opt}
+                    </label>
+                `;
+            });
+
+            container.innerHTML += `
+                <div class="question-card">
+                    <div class="question-text">Soalan ${index + 1}: ${item.q}</div>
+                    <div class="options-container">${optionsHtml}</div>
+                </div>
+            `;
+        });
+    }
+
+    function gradeQuiz() {
+        markah = 0;
+        let semuaDijawab = true;
+
+        bankSoalan.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            if (!selected) {
+                semuaDijawab = false;
+            } else {
+                if (parseInt(selected.value) === item.a) {
+                    markah++;
+                }
+            }
+        });
+
+        if (!semuaDijawab) {
+            const sahkan = confirm("Ada soalan yang belum dijawab. Anda pasti mahu hantar?");
+            if (!sahkan) return;
+        }
+
+        document.getElementById("quiz-section").style.display = "none";
+        document.getElementById("result-section").style.display = "block";
+        document.getElementById("score-text").innerText = `${markah} / 50`;
+    }
+
+    function sendToTelegram() {
+        const btn = document.getElementById("send-tele-btn");
+        const status = document.getElementById("status-msg");
+        
+        btn.disabled = true;
+        status.innerText = "Sedang menghantar markah...";
+        status.style.color = "orange";
+
+        // Format mesej yang kemas untuk masuk ke Telegram Cikgu
+        const textMessage = `📌 *KEPUTUSAN KUIZ SAINS T5*\n\n` +
+                            `👤 *Nama:* ${namaMurid}\n` +
+                            `🏫 *Kelas:* ${kelasMurid}\n` +
+                            `📊 *Markah:* ${markah} / 50\n` +
+                            `📈 *Peratus:* ${(markah/50*100).toFixed(2)}%\n` +
+                            `📅 *Tarikh:* ${new Date().toLocaleString('ms-MY')}`;
+
+        const url = `https://api.telegram.org/bot${TELE_TOKEN}/sendMessage`;
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                chat_id: TELE_CHAT_ID,
+                text: textMessage,
+                parse_mode: 'Markdown'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.ok) {
+                status.innerText = "✅ Markah berjaya dihantar terus ke Telegram Cikgu!";
+                status.style.color = "green";
+                btn.innerText = "Sudah Dihantar";
+            } else {
+                status.innerText = "❌ Gagal menghantar. Sila tangkap layar (screenshot) markah anda.";
+                status.style.color = "red";
+                btn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            status.innerText = "❌ Ralat Rangkaian. Sila pastikan anda mempunyai akses internet semasa menghantar.";
+            status.style.color = "red";
+            btn.disabled = false;
+        });
+    }
+</script>
+
+</body>
+</html>
